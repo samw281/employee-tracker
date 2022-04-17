@@ -1,6 +1,7 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const connection = require("./db/db");
+require("console.table")
 
 const menuQuestion = {
   name: "menu",
