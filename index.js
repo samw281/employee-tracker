@@ -1,129 +1,129 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
-const connection = require("./db/db");
-require("console.table")
+const db = require("./db/db");
+require("console.table");
 
-const menuQuestion = {
-  name: "menu",
+const menuQuestions = {
   type: "list",
+  name: "menu",
   message: "What would you like to do?",
   choices: [
-    "View all departments",
-    "View all roles",
-    "View all employees",
-    "Add a department",
+    "View departments",
+    "View roles",
+    "View employees",
+    "Add a new department",
     "Add a role",
     "Add an employee",
     "Update a role",
-    "I'm Done",
+    "Return",
   ],
 };
 const addDepartmentQuestions = {
-  name: "department",
   type: "input",
-  message: "What is the name of the department?",
+  name: "department",
+  message: "What is the name of the new department?",
 };
 const addRoleQuestions = [
   {
+    type: "input",
     name: "title",
-    type: "input",
-    message: "What is the title of your role?",
+    message: "What is the title of the role?",
   },
   {
+    type: "input",
     name: "salary",
-    type: "input",
-    message: "What is the new role's salary?",
+    message: "What is the salary?",
   },
   {
-    name: "departmentId",
     type: "input",
-    message: "What is your roles department ID?",
+    name: "departmentId",
+    message: "What is the department ID?",
   },
 ];
 const addEmployeeQuestions = [
   {
-    name: "firstName",
     type: "input",
+    name: "fName",
     message: "What the new employee's first name?",
   },
   {
-    name: "lastName",
     type: "input",
+    name: "lName",
     message: "What is the employee's last name?",
   },
   {
-    name: "managerId",
     type: "input",
-    message: "Who is this employees manager?(Input the managers id)",
+    name: "manId",
+    message: "What is the new employee's manager's ID?",
   },
   {
-    name: "roleId",
     type: "input",
-    message: "What is your employee's role? (Input the roles id)",
+    name: "roleId",
+    message: "What is the employee's role ID?",
   },
 ];
 
-function viewDepartments() {
-  connection.query("SELECT * FROM department", (err, results) => {
+function viewAllDepartments() {
+  db.query("SELECT * FROM department", (err, results) => {
     if (err) {
       console.log(err);
     }
     console.table(results);
-    mainMenu();
+    startMenu();
   });
 }
-function viewRoles() {
-  connection.query("SELECT * FROM role", (err, results) => {
+function viewAllRoles() {
+  db.query("SELECT * FROM role", (err, results) => {
     if (err) {
       console.log(err);
     }
     console.table(results);
-    mainMenu();
+    startMenu();
   });
 }
-function viewEmployees() {
-  connection.query("SELECT * FROM employee", (err, results) => {
+function viewAllEmployees() {
+  db.query("SELECT * FROM employee", (err, results) => {
     if (err) {
       console.log(err);
     }
     console.table(results);
-    mainMenu();
+    startMenu();
   });
 }
-async function addDepartment() {
+async function addNewDepartment() {
   await inquirer.prompt(addDepartmentQuestions).then((response) => {
-    connection.query(
+    db.query(
       `INSERT INTO department(name) VALUES (?)`,
       response.department,
       (err, results) => {
         if (err) {
           console.log(err);
         }
-        connection.query("SELECT * FROM department", (err, results) => {
+        db.query("SELECT * FROM department", (err, results) => {
           console.table(results);
-          mainMenu();
+          startMenu();
         });
       }
     );
   });
 }
-function addRole() {
-  connection.query("SELECT * FROM department", (err, results) => {
+function addNewRole() {
+  db.query("SELECT * FROM department", (err, results) => {
     console.table(results);
     if (err) {
       console.log(err);
     }
     inquirer.prompt(addRoleQuestions).then((response) => {
-      connection.query(
+      db.query(
         `INSERT INTO role(title,salary,department_id) VALUES (?,?,?)`,
         [response.title, response.salary, response.departmentId],
         (err, results) => {
           if (err) {
             console.log(err);
           }
-          connection.query("SELECT * FROM role", (err, results) => {
+          db.query("SELECT * FROM role", (err, results) => {
             console.table(results);
-            mainMenu();
+            startMenu();
           });
         }
       );
@@ -131,23 +131,23 @@ function addRole() {
   });
 }
 function addEmployee() {
-  connection.query("SELECT * FROM role", (err, results) => {
+  db.query("SELECT * FROM role", (err, results) => {
     console.table(results);
-    connection.query("SELECT * FROM employee", (err, results) => {
+    db.query("SELECT * FROM employee", (err, results) => {
       console.table(results);
       inquirer.prompt(addEmployeeQuestions).then((response) => {
-        connection.query(
+        db.query(
           "INSERT INTO employee(first_name,last_name,manager_id,role_id) VALUES (?,?,?,?)",
           [
-            response.firstName,
-            response.lastName,
-            response.managerId,
+            response.fName,
+            response.lName,
+            response.manId,
             response.roleId,
           ],
           (err, results) => {
-            connection.query("SELECT * FROM employee", (err, results) => {
+            db.query("SELECT * FROM employee", (err, results) => {
               console.table(results);
-              mainMenu();
+              startMenu();
             });
           }
         );
@@ -155,13 +155,13 @@ function addEmployee() {
     });
   });
 }
-function updateRole() {
-  connection.query("SELECT * FROM role", (err, results) => {
+function updateEmployeeRole() {
+  db.query("SELECT * FROM role", (err, results) => {
     console.table(results);
     const rolesChoice = results.map((obj) => {
       return { name: obj.title, value: obj.id };
     });
-    connection.query("SELECT * FROM employee", (err, results) => {
+    db.query("SELECT * FROM employee", (err, results) => {
       console.table(results);
       const employeeChoice = results.map((obj) => {
         return { name: obj.first_name, value: obj.id };
@@ -181,13 +181,13 @@ function updateRole() {
         },
       ];
       inquirer.prompt(newQuestion).then((response) => {
-        connection.query(
+        db.query(
           "UPDATE employee SET role_id = ? WHERE id = ?",
           [response.roles, response.employees],
           (err, results) => {
-            connection.query("SELECT * FROM employee", (err, results) => {
+            db.query("SELECT * FROM employee", (err, results) => {
               console.table(results);
-              mainMenu();
+              startMenu();
             });
           }
         );
@@ -195,25 +195,25 @@ function updateRole() {
     });
   });
 }
-function mainMenu() {
-  inquirer.prompt(menuQuestion).then((response) => {
-    if (response.menu === "View all departments") {
-      viewDepartments();
-    } else if (response.menu === "View all roles") {
-      viewRoles();
-    } else if (response.menu === "View all employees") {
-      viewEmployees();
-    } else if (response.menu === "Add a department") {
-      addDepartment();
-    } else if (response.menu === "Update a role") {
-      updateRole();
+function startMenu() {
+  inquirer.prompt(menuQuestions).then((response) => {
+    if (response.menu === "View departments") {
+      viewAllDepartments();
+    } else if (response.menu === "View roles") {
+      viewAllRoles();
+    } else if (response.menu === "View employees") {
+      viewAllEmployees();
+    } else if (response.menu === "Add a new department") {
+      addNewDepartment();
+    } else if (response.menu === "Add a role") {
+      addNewRole();
     } else if (response.menu === "Add an employee") {
       addEmployee();
-    } else if (response.menu === "I'm Done") {
+    } else if (response.menu === "Update a role") {
+      updateEmployeeRole();
+    } else if (response.menu === "Return") {
       return;
-    } else if (response.menu === "Add a role") {
-      addRole();
     }
   });
 }
-mainMenu();
+startMenu();
