@@ -40,7 +40,7 @@ const addRoleQuestions = [
     message: "What is the department ID?",
   },
 ];
-const addEmployeeQuestions = [
+const addEmpQuestions = [
   {
     type: "input",
     name: "fName",
@@ -63,7 +63,7 @@ const addEmployeeQuestions = [
   },
 ];
 
-function viewAllDepartments() {
+function viewAllDep() {
   db.query("SELECT * FROM department", (err, results) => {
     if (err) {
       console.log(err);
@@ -81,7 +81,7 @@ function viewAllRoles() {
     startMenu();
   });
 }
-function viewAllEmployees() {
+function viewAllEmp() {
   db.query("SELECT * FROM employee", (err, results) => {
     if (err) {
       console.log(err);
@@ -90,7 +90,7 @@ function viewAllEmployees() {
     startMenu();
   });
 }
-async function addNewDepartment() {
+async function addNewDep() {
   await inquirer.prompt(addDepartmentQuestions).then((response) => {
     db.query(
       `INSERT INTO department(name) VALUES (?)`,
@@ -130,12 +130,12 @@ function addNewRole() {
     });
   });
 }
-function addEmployee() {
+function addEmp() {
   db.query("SELECT * FROM role", (err, results) => {
     console.table(results);
     db.query("SELECT * FROM employee", (err, results) => {
       console.table(results);
-      inquirer.prompt(addEmployeeQuestions).then((response) => {
+      inquirer.prompt(addEmpQuestions).then((response) => {
         db.query(
           "INSERT INTO employee(first_name,last_name,manager_id,role_id) VALUES (?,?,?,?)",
           [
@@ -155,7 +155,7 @@ function addEmployee() {
     });
   });
 }
-function updateEmployeeRole() {
+function updateEmpRole() {
   db.query("SELECT * FROM role", (err, results) => {
     console.table(results);
     const rolesChoice = results.map((obj) => {
@@ -170,13 +170,13 @@ function updateEmployeeRole() {
         {
           name: "employees",
           type: "list",
-          message: "Who would you like to update?",
+          message: "Which employee would you like to update?",
           choices: employeeChoice,
         },
         {
           name: "roles",
           type: "list",
-          message: "Which would you like to update the employee with?",
+          message: "Which role would you like to update the employee with?",
           choices: rolesChoice,
         },
       ];
@@ -198,19 +198,19 @@ function updateEmployeeRole() {
 function startMenu() {
   inquirer.prompt(menuQuestions).then((response) => {
     if (response.menu === "View departments") {
-      viewAllDepartments();
+      viewAllDep();
     } else if (response.menu === "View roles") {
       viewAllRoles();
     } else if (response.menu === "View employees") {
-      viewAllEmployees();
+      viewAllEmp();
     } else if (response.menu === "Add a new department") {
-      addNewDepartment();
+      addNewDep();
     } else if (response.menu === "Add a role") {
       addNewRole();
     } else if (response.menu === "Add an employee") {
-      addEmployee();
+      addEmp();
     } else if (response.menu === "Update a role") {
-      updateEmployeeRole();
+      updateEmpRole();
     } else if (response.menu === "Return") {
       return;
     }
